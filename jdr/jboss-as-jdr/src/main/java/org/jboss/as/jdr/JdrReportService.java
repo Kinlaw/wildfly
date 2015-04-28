@@ -56,6 +56,8 @@ public class JdrReportService implements JdrReportCollector, Service<JdrReportCo
 
     public static final ServiceName SERVICE_NAME = ServiceName.JBOSS.append("jdr", "collector");
 
+    private String uuid;
+
     public static ServiceController<JdrReportCollector> addService(final ServiceTarget target) {
 
         JdrReportService service = new JdrReportService();
@@ -122,7 +124,19 @@ public class JdrReportService implements JdrReportCollector, Service<JdrReportCo
         }
     }
 
+    public static ServiceName createServiceName() {
+        return ServiceName.JBOSS.append(org.jboss.as.jdr.JdrReportExtension.SUBSYSTEM_NAME);
+    }
+
     public JdrReportService getValue() throws IllegalStateException, IllegalArgumentException {
         return this;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 }

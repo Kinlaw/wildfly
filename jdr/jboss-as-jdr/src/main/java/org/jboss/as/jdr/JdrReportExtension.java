@@ -45,6 +45,10 @@ public class JdrReportExtension implements Extension {
 
     public static final String SUBSYSTEM_NAME = "jdr";
 
+    protected static final String UUID = "uuid";
+    protected static final String JDR_PROPERTIES = "jdr-properties";
+    protected static final PathElement JDR_PATH = PathElement.pathElement(JDR_PROPERTIES);
+
     private static final ModelVersion CURRENT_MODEL_VERSION = ModelVersion.create(1, 2, 0);
 
     static final PathElement SUBSYSTEM_PATH = PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME);
@@ -74,7 +78,9 @@ public class JdrReportExtension implements Extension {
         if (context.isRuntimeOnlyRegistrationValid()) {
             root.registerOperationHandler(JdrReportRequestHandler.DEFINITION, JdrReportRequestHandler.INSTANCE);
         }
+        System.out.println("Extension - before registerXMLElement");
         subsystemRegistration.registerXMLElementWriter(JdrReportSubsystemParser.INSTANCE);
+        System.out.println("Extension - after registerXMLElement");
     }
 
     public void initializeParsers(ExtensionParsingContext context) {

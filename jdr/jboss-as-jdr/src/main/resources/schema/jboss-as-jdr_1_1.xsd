@@ -32,7 +32,7 @@
     
     <xs:complexType name="subsystem">
       <xs:sequence>
-          <xs:element name="jdr" type="jdr-properties" />
+          <xs:element name="jdr-properties" type="jdr-properties" />
       </xs:sequence>
     </xs:complexType>
 

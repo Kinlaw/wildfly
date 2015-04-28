@@ -23,24 +23,53 @@
 package org.jboss.as.jdr;
 
 
-import org.jboss.as.controller.AbstractAddStepHandler;
+//import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.AbstractBoottimeAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
+//import org.jboss.msc.service.ServiceName;
+//import org.jboss.msc.service.ServiceRegistry;
+//import org.jboss.msc.service.ServiceController.Mode;
 
 /**
  * Adds the JDR subsystem.
  *
  * @author Brian Stansberry
  */
-public class JdrReportSubsystemAdd extends AbstractAddStepHandler {
+//public class JdrReportSubsystemAdd extends AbstractAddStepHandler {
+//    static final JdrReportSubsystemAdd INSTANCE = new JdrReportSubsystemAdd();
+//
+//    private JdrReportSubsystemAdd() {
+//    }
+//
+//    @Override
+//    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
+//        JdrReportSubsystemDefinition.UUID.validateAndSet(operation, model);
+//        JdrReportService.addService(context.getServiceTarget());
+//    }
+//}
+class JdrReportSubsystemAdd extends AbstractBoottimeAddStepHandler {
+
     static final JdrReportSubsystemAdd INSTANCE = new JdrReportSubsystemAdd();
 
     private JdrReportSubsystemAdd() {
     }
 
+    /** {@inheritDoc} */
     @Override
-    protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) throws OperationFailedException {
+    protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
+        System.out.println("JdrSubsystemAdd - populateModel");
+        JdrReportSubsystemDefinition.UUID.validateAndSet(operation, model);
+        System.out.println("JdrSubsystemAdd - populateModel finish");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performBoottime(OperationContext context, ModelNode operation, ModelNode model)
+            throws OperationFailedException {
+        System.out.println("JdrSubAdd - performBoottime");
         JdrReportService.addService(context.getServiceTarget());
+        System.out.println("JdrSubAdd - performBoottime finish");
     }
 }

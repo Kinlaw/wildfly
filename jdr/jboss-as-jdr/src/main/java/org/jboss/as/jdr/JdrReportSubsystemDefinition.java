@@ -22,7 +22,13 @@
 
 package org.jboss.as.jdr;
 
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.SimpleResourceDefinition;
+import org.jboss.as.controller.registry.AttributeAccess;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.dmr.ModelNode;
+import org.jboss.dmr.ModelType;
 
 /**
  * @author <a href="mailto:tomaz.cerar@redhat.com">Tomaz Cerar</a> (c) 2012 Red Hat Inc.
@@ -30,10 +36,29 @@ import org.jboss.as.controller.SimpleResourceDefinition;
 public class JdrReportSubsystemDefinition extends SimpleResourceDefinition {
     static final JdrReportSubsystemDefinition INSTANCE = new JdrReportSubsystemDefinition();
 
+    protected static final SimpleAttributeDefinition UUID =
+            new SimpleAttributeDefinitionBuilder(JdrReportExtension.UUID, ModelType.STRING)
+                    .setAllowExpression(true)
+                    .setXmlName(JdrReportExtension.UUID)
+                    .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
+                    .setDefaultValue(new ModelNode(java.util.UUID.randomUUID().toString()))
+                    .setAllowNull(true)
+                    .build();
+
     private JdrReportSubsystemDefinition() {
         super(JdrReportExtension.SUBSYSTEM_PATH, JdrReportExtension.getResourceDescriptionResolver(),
                 JdrReportSubsystemAdd.INSTANCE,
                 JdrReportSubsystemRemove.INSTANCE);
+    }
+
+    /**
+     * {@inheritDoc}
+     * Registers an add operation handler or a remove operation handler if one was provided to the constructor.
+     */
+    @Override
+    public void registerOperations(ManagementResourceRegistration resourceRegistration) {
+        super.registerOperations(resourceRegistration);
+        resourceRegistration.registerReadWriteAttribute(UUID, null, JdrReportAttributeHandler.INSTANCE);
     }
 
 }
