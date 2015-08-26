@@ -87,6 +87,7 @@
         <version.com.github.relaxng>2011.1</version.com.github.relaxng>
         <version.com.google.guava>18.0</version.com.google.guava>
         <version.com.h2database>1.3.173</version.com.h2database>
+        <version.com.redhat.gss.redhat-support-lib-java>2.0.10</version.com.redhat.gss.redhat-support-lib-java>
         <version.com.sun.faces>2.2.12-jbossorg-2</version.com.sun.faces>
         <version.com.sun.istack>2.21</version.com.sun.istack>
         <version.com.sun.xml.fastinfoset>1.2.13</version.com.sun.xml.fastinfoset>
@@ -96,6 +97,7 @@
         <version.commons-codec>1.10</version.commons-codec>
         <version.commons-collections>3.2.1</version.commons-collections>
         <version.commons-digester>1.8</version.commons-digester>
+        <version.commons-net>3.2</version.commons-net>
         <version.commons-pool>1.6</version.commons-pool>
         <version.dom4j>1.6.1</version.dom4j>
         <version.gnu.getopt>1.0.13</version.gnu.getopt>
@@ -274,6 +276,7 @@
         <module>ejb3</module>
         <module>feature-pack</module>
         <module>iiop-openjdk</module>
+        <module>insights</module>
         <module>jaxrs</module>
         <module>jdr</module>
         <module>jpa</module>
@@ -836,6 +839,12 @@
     <dependencyManagement>
         <dependencies>
 
+            <dependency>
+                <groupId>com.redhat.gss</groupId>
+                <artifactId>wildfly-redhat-support-lib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Import the core parent to get all the managed dependencies from core -->
             <dependency>
                 <groupId>org.wildfly.core</groupId>
@@ -1085,6 +1094,12 @@
 
             <dependency>
                 <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-insights</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-jacorb</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -1175,6 +1190,12 @@
             <dependency>
                 <groupId>org.wildfly</groupId>
                 <artifactId>wildfly-pojo</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.wildfly</groupId>
+                <artifactId>wildfly-redhat-support-lib</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1485,6 +1506,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.redhat.gss</groupId>
+                <artifactId>redhat-support-lib-java</artifactId>
+                <version>${version.com.redhat.gss.redhat-support-lib-java}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.sun.xml.bind.external</groupId>
                 <artifactId>rngom</artifactId>
                 <version>${version.sun.jaxb}</version>
@@ -1588,6 +1615,12 @@
                         <groupId>servlet-api</groupId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${version.commons-net}</version>
             </dependency>
 
             <dependency>

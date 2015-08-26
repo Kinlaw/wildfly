@@ -1,0 +1,23 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="urn:org.jboss.as.insights:1.0"
+            xmlns="urn:org.jboss.as.insights:1.0"
+            elementFormDefault="qualified"
+            attributeFormDefault="unqualified"
+            version="1.0">
+
+    <xs:element name="subsystem" type="subsystemType"/>
+    <xs:complexType name="subsystemType">
+        <xs:attribute name="rhn-uid" type="xs:string"/>
+        <xs:attribute name="rhn-pw" type="xs:string"/>
+        <xs:attribute name="enabled" type="xs:string"/>
+        <xs:attribute name="frequency" type="xs:string"/>
+        <xs:attribute name="proxy-user" type="xs:string"/>
+        <xs:attribute name="proxy-password" type="xs:string"/>
+        <xs:attribute name="proxy-url" type="xs:string"/>
+        <xs:attribute name="proxy-port" type="xs:string"/>
+        <xs:attribute name="insights-endpoint" type="xs:string"/>
+        <xs:attribute name="system-endpoint" type="xs:string"/>
+        <xs:attribute name="url" type="xs:string"/>
+        <xs:attribute name="user-agent" type="xs:string"/>
+    </xs:complexType>
+</xs:schema>

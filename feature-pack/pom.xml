@@ -305,6 +305,17 @@
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>txw2</artifactId>
         </dependency>
+        
+        <dependency>
+        	<groupId>com.redhat.gss</groupId>
+        	<artifactId>redhat-support-lib-java</artifactId>
+        	<!-- <exclusions>
+		        <exclusion>
+		        	<groupId>sample.ProjectB</groupId>
+		        	<artifactId>Project-B</artifactId>
+		        </exclusion>
+      		</exclusions> -->
+       	</dependency>
 
         <dependency>
             <groupId>com.sun.xml.bind.external</groupId>
@@ -345,6 +356,11 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
+        
+        <dependency>
+        	<groupId>commons-net</groupId>
+        	<artifactId>commons-net</artifactId>
+       	</dependency>
 
         <dependency>
             <groupId>commons-pool</groupId>
