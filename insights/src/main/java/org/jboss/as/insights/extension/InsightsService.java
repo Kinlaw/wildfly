@@ -75,6 +75,7 @@ public class InsightsService implements Service<InsightsService> {
 
     public static final String INSIGHTS_DESCRIPTION = "Properties file consisting of RHN login information and insights/insights URL";
 
+    public static final int DEFAULT_FREQUENCY = 1;
     public static final String DEFAULT_BASE_URL = "https://api.access.redhat.com";
     public static final String DEFAULT_INSIGHTS_ENDPOINT = "/r/insights/v1/uploads/";
     public static final String DEFAULT_SYSTEM_ENDPOINT = "/r/insights/v1/systems/";
@@ -358,7 +359,7 @@ public class InsightsService implements Service<InsightsService> {
         }
     }
 
-    private void sendJdr(String fileName, String uuid) {
+    public void sendJdr(String fileName, String uuid) {
         String description = JDR_DESCRIPTION.replace("{uuid}", uuid);
         boolean wasSuccessful = true;
         File file = new File(fileName);
