@@ -53,7 +53,7 @@ public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
             InsightsExtension.FREQUENCY, ModelType.LONG)
             .setAllowExpression(true).setXmlName(InsightsExtension.FREQUENCY)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(new ModelNode(1000)).setAllowNull(true).build();
+            .setDefaultValue(new ModelNode(InsightsService.DEFAULT_FREQUENCY)).setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition ENABLED = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.ENABLED, ModelType.BOOLEAN)
