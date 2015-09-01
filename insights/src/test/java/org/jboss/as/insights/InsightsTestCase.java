@@ -1,5 +1,7 @@
 package org.jboss.as.insights;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -34,5 +36,6 @@ public class InsightsTestCase {
         service.sendJdr(testFile.getPath(),uuid);
         
         //TODO: evaluate if an error was logged in the root logger
+        assertTrue(true); //placeholder until test is fully implemented
     }
 }

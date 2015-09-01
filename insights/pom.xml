@@ -92,53 +92,11 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.wildfly.core</groupId>
+            <artifactId>wildfly-subsystem-test</artifactId>
+            <type>pom</type>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
-
-    <build>
-	<!-- Maven will append the version to the finalName (which is the name
-           given to the generated war, and hence the context root) -->
-        <finalName>${project.artifactId}</finalName>
-        <plugins>
-            <plugin> 
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-antrun-plugin</artifactId>
-                <inherited>false</inherited>
-                <executions>
-                    <execution>
-                        <id>build-dist</id>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                        <phase>package</phase>
-                        <configuration>
-                            <target> 
-                                <!-- Replace the '.' in ${module.name} with '/' to get its path  -->
-                                <tempfile property="temp.file" />
-                                <echo message="${module.name}" file="${temp.file}" />
-                                <replace file="${temp.file}" token="." value="/" />
-                                <loadfile srcfile="${temp.file}" property="module.path" />
-                                <delete file="${temp.file}" />
-
-                                <delete dir="target/module" />
-                                <property name="module.dir" value="target/module/${module.path}/main" />
-                				<property name="wildfly_dir" value="../build/target/${server.output.dir.prefix}-${jboss.as.release.version}/modules/system/layers/base/org/jboss/as/insights/main" />
-                				<property name="dist_dir" value="../dist/target/${server.output.dir.prefix}-${jboss.as.release.version}/modules/system/layers/base/org/jboss/as/insights/main" />
-
-                                <copy file="src/main/resources/module/main/module.xml" tofile="${module.dir}/module.xml" />
-                                <copy file="target/${project.artifactId}.jar" tofile="${module.dir}/jboss-as-insights.jar" />
-
-                				<copy file="src/main/resources/module/main/module.xml" tofile="${wildfly_dir}/module.xml" />
-                                <copy file="target/${project.artifactId}.jar" tofile="${wildfly_dir}/jboss-as-insights.jar" />
-
-                				<copy file="src/main/resources/module/main/module.xml" tofile="${dist_dir}/module.xml" />
-                                <copy file="target/${project.artifactId}.jar" tofile="${dist_dir}/jboss-as-insights.jar" />
-
-                                <echo>Module ${module.name} has been created in the target/module directory. Copy to your WildFly installation.</echo>
-                            </target>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-	</plugins>
-    </build>
 </project>

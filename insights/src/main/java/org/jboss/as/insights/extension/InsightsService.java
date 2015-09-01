@@ -67,8 +67,6 @@ public class InsightsService implements Service<InsightsService> {
 
     public static final String JDR_DESCRIPTION = "JDR for UUID {uuid}";
 
-    private static volatile InsightsService instance;
-
     public static final String JBOSS_PROPERTY_DIR = "jboss.server.data.dir";
 
     public static final String INSIGHTS_PROPERTY_FILE_NAME = "insights.properties";
@@ -132,22 +130,9 @@ public class InsightsService implements Service<InsightsService> {
     }
 
     public static InsightsService getInstance(long tick, boolean enabled, String insightsEndpoint,
-            String systemEndpoint, String url, String userAgent) {
-        if (instance == null) {
-            synchronized (InsightsService.class) {
-                if (instance == null) {
-                    instance = new InsightsService(tick, enabled, insightsEndpoint, systemEndpoint,
-                            url, userAgent);
-                }
-            }
-        } else {
-            instance.frequency = tick;
-            instance.enabled = enabled;
-            instance.insightsEndpoint = insightsEndpoint;
-            instance.systemEndpoint = systemEndpoint;
-            instance.url = url;
-            instance.userAgent = userAgent;
-        }
+        String systemEndpoint, String url, String userAgent) {
+        InsightsService instance = new InsightsService(tick, enabled, insightsEndpoint, systemEndpoint,
+                        url, userAgent);
         return instance;
     }
 
@@ -352,7 +337,6 @@ public class InsightsService implements Service<InsightsService> {
         } catch (MalformedURLException e) {
             proxyUrlUrl = null;
         }
-        System.out.println("rhnUid, rhnPw: " + rhnUid + ", " + rhnPw);
         if(rhnUid != null && rhnPw != null) {
             api = new API(rhnUid, rhnPw, url, proxyUser, proxyPw, proxyUrlUrl,
                     proxyPortInt, userAgent);

@@ -2,8 +2,6 @@ package org.jboss.as.insights;
 
 import java.io.IOException;
 
-import javax.xml.stream.XMLStreamException;
-
 import org.jboss.as.controller.ModelVersion;
 import org.jboss.as.controller.RunningMode;
 import org.jboss.as.insights.extension.InsightsExtension;
@@ -57,26 +55,5 @@ public class InsightsSubsystemTestCase extends AbstractSubsystemBaseTest {
                 return RunningMode.NORMAL;
             }
         };
-    }
-
-    protected static final OptionAttributeDefinition ENABLED_PROTOCOLS = OptionAttributeDefinition.builder("enabled-protocols", Options.SSL_ENABLED_PROTOCOLS)
-            .setAllowNull(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setAllowExpression(true)
-            .build();
-
-    @Test
-    public void testSequence() throws Exception {
-        OptionMap.Builder builder = OptionMap.builder();
-        ModelNode model = new ModelNode();
-        ModelNode operation = new ModelNode();
-        operation.get(ENABLED_PROTOCOLS.getName()).set("TLSv1, TLSv1.1, TLSv1.2");
-        ENABLED_PROTOCOLS.validateAndSet(operation, model);
-        ENABLED_PROTOCOLS.resolveOption(ExpressionResolver.SIMPLE, model, builder);
-        Sequence<String> protocols = builder.getMap().get(Options.SSL_ENABLED_PROTOCOLS);
-        Assert.assertEquals(3, protocols.size());
-        Assert.assertEquals("TLSv1", protocols.get(0));
-        Assert.assertEquals("TLSv1.1", protocols.get(1));
-        Assert.assertEquals("TLSv1.2", protocols.get(2));
     }
 }

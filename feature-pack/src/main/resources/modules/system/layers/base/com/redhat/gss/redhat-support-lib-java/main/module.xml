@@ -1,7 +1,6 @@
 <module xmlns="urn:jboss:module:1.0" name="com.redhat.gss.redhat-support-lib-java">
     
     <resources>
-        <!-- <resource-root path="redhat-support-lib-java.jar"/> -->
         <artifact name="${com.redhat.gss:redhat-support-lib-java}"/>
     </resources>
 
