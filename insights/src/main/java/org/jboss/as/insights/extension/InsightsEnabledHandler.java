@@ -21,6 +21,8 @@
  */
 package org.jboss.as.insights.extension;
 
+import static org.jboss.as.insights.extension.InsightsService.SERVICE_NAME;
+
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
@@ -37,18 +39,10 @@ public class InsightsEnabledHandler extends AbstractWriteAttributeHandler<Void> 
         super(InsightsSubsystemDefinition.ENABLED);
     }
 
-    protected boolean applyUpdateToRuntime(OperationContext context,
-            ModelNode operation, String attributeName, ModelNode resolvedValue,
-            ModelNode currentValue, HandbackHolder<Void> handbackHolder)
-            throws OperationFailedException {
-        if (attributeName.equals(InsightsExtension.ENABLED)) {
-            InsightsService service = (InsightsService) context
-                    .getServiceRegistry(true)
-                    .getRequiredService(InsightsService.createServiceName())
-                    .getValue();
-            service.setEnabled(resolvedValue.asBoolean());
-            context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
-        }
+    @Override
+    protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
+            ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<Void> handbackHolder) throws OperationFailedException {
+        ((InsightsService) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue()).setEnabled(resolvedValue.asBoolean());
         return false;
     }
 
@@ -81,7 +75,6 @@ public class InsightsEnabledHandler extends AbstractWriteAttributeHandler<Void> 
                     .getRequiredService(InsightsService.createServiceName())
                     .getValue();
             service.setEnabled(valueToRestore.asBoolean());
-            context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
         }
     }
 }

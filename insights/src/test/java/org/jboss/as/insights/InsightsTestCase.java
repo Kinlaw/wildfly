@@ -22,7 +22,6 @@ public class InsightsTestCase {
         String systemEndpoint = InsightsService.DEFAULT_SYSTEM_ENDPOINT;
         String url = InsightsService.DEFAULT_BASE_URL;
         String userAgent = InsightsService.DEFAULT_USER_AGENT;
-        
 //        InsightsService service = InsightsService.getInstance(tick, enabled, insightsEndpoint,
 //                systemEndpoint, url, userAgent);
         File testFile = new File("test.txt");
@@ -34,7 +33,6 @@ public class InsightsTestCase {
         
         //TODO: read in rhn login credentials and set them in InsightsService
 //        service.sendJdr(testFile.getPath(),uuid);
-        
         //TODO: evaluate if an error was logged in the root logger
         assertTrue(true); //placeholder until test is fully implemented
     }

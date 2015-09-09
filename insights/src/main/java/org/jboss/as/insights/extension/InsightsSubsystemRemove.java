@@ -28,10 +28,10 @@ import org.jboss.as.controller.AbstractRemoveStepHandler;
  *
  * @author <a href="jkinlaw@redhat.com">Josh Kinlaw</a>
  */
-class SubsystemRemove extends AbstractRemoveStepHandler {
+class InsightsSubsystemRemove extends AbstractRemoveStepHandler {
 
-    static final SubsystemRemove INSTANCE = new SubsystemRemove();
+    static final InsightsSubsystemRemove INSTANCE = new InsightsSubsystemRemove();
 
-    private SubsystemRemove() {
+    private InsightsSubsystemRemove() {
     }
 }

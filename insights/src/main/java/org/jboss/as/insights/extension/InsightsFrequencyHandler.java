@@ -21,9 +21,12 @@
  */
 package org.jboss.as.insights.extension;
 
+import static org.jboss.as.insights.extension.InsightsService.SERVICE_NAME;
+
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
+import org.jboss.as.insights.api.InsightsScheduler;
 import org.jboss.dmr.ModelNode;
 
 /**
@@ -38,52 +41,30 @@ public class InsightsFrequencyHandler extends
         super(InsightsSubsystemDefinition.SCHEDULE_INTERVAL);
     }
 
-    protected boolean applyUpdateToRuntime(OperationContext context,
-            ModelNode operation, String attributeName, ModelNode resolvedValue,
-            ModelNode currentValue, HandbackHolder<Void> handbackHolder)
-            throws OperationFailedException {
-        if (attributeName.equals(InsightsExtension.SCHEDULE_INTERVAL)) {
-            InsightsService service = (InsightsService) context
-                    .getServiceRegistry(true)
-                    .getRequiredService(InsightsService.createServiceName())
-                    .getValue();
-            service.setFrequency(resolvedValue.asLong());
-            context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
-        }
-
+    @Override
+    protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
+            ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<Void> handbackHolder) throws OperationFailedException {
+        InsightsScheduler scheduler = (InsightsScheduler) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue();
+        scheduler.setScheduleInterval(resolvedValue.asLong());
         return false;
     }
 
     /**
      * Hook to allow subclasses to revert runtime changes made in
-     * {@link #applyUpdateToRuntime(OperationContext, ModelNode, String, ModelNode, ModelNode, HandbackHolder)}
-     * .
+     * {@link #applyUpdateToRuntime(OperationContext, ModelNode, String, ModelNode, ModelNode, HandbackHolder)} .
      *
-     * @param context
-     *            the context of the operation
-     * @param operation
-     *            the operation
-     * @param attributeName
-     *            the name of the attribute being modified
-     * @param valueToRestore
-     *            the previous value for the attribute, before this operation
-     *            was executed
-     * @param valueToRevert
-     *            the new value for the attribute that should be reverted
-     * @param handback
-     *            an object, if any, passed in to the {@code handbackHolder} by
-     *            the {@code applyUpdateToRuntime} implementation
+     * @param context the context of the operation
+     * @param operation the operation
+     * @param attributeName the name of the attribute being modified
+     * @param valueToRestore the previous value for the attribute, before this operation was executed
+     * @param valueToRevert the new value for the attribute that should be reverted
+     * @param handback an object, if any, passed in to the {@code handbackHolder} by the {@code applyUpdateToRuntime}
+     * implementation
      */
-    protected void revertUpdateToRuntime(OperationContext context,
-            ModelNode operation, String attributeName,
+    @Override
+    protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
             ModelNode valueToRestore, ModelNode valueToRevert, Void handback) {
-        if (attributeName.equals(InsightsExtension.SCHEDULE_INTERVAL)) {
-            InsightsService service = (InsightsService) context
-                    .getServiceRegistry(true)
-                    .getRequiredService(InsightsService.createServiceName())
-                    .getValue();
-            service.setFrequency(valueToRestore.asLong());
-            context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
-        }
+        InsightsScheduler scheduler = (InsightsScheduler) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue();
+        scheduler.setScheduleInterval(valueToRestore.asLong());
     }
 }

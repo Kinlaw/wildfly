@@ -33,8 +33,7 @@ import org.jboss.msc.service.ServiceName;
  */
 public interface InsightsScheduler {
 
-    ServiceName BASE_SERVICE_NAME = ServiceName.JBOSS.append("server",
-            "deployment", "scanner");
+    ServiceName BASE_SERVICE_NAME = ServiceName.JBOSS.append("insights", "report", "uploader");
 
     /**
      * Check whether the scheduler is enabled.
@@ -73,16 +72,19 @@ public interface InsightsScheduler {
 
     /**
      * set the rhnUid
+     * @param rhnUid
      */
     void setRhnUid(String rhnUid);
 
     /**
      * set the rhnPw
+     * @param rhnPw
      */
     void setRhnPw(String rhnPw);
 
     /**
      * set the proxy URL
+     * @param proxyUrl
      */
     void setProxyUrl(String proxyUrl);
 
@@ -93,16 +95,25 @@ public interface InsightsScheduler {
 
     /**
      * set the proxy user
+     * @param proxyPort
+     */
+    void setProxyPort(int proxyPort);
+
+    /**
+     * set the proxy user
+     * @param proxyUser
      */
     void setProxyUser(String proxyUser);
 
     /**
      * set the proxy password
+     * @param proxyPw
      */
     void setProxyPw(String proxyPw);
 
     /**
      * set the url
+     * @param url
      */
     void setUrl(String url);
 
@@ -123,4 +134,8 @@ public interface InsightsScheduler {
      * @param userAgent
      */
     void setUserAgent(String userAgent);
+
+    void enable(String rhnUid, String rhnPw);
+
+    void enable(String rhnUid, String rhnPw, String proxyUrl, int proxyPort, String proxyUser, String proxyPwd);
 }

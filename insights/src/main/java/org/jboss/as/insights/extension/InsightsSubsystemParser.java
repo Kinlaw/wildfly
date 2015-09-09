@@ -22,10 +22,12 @@
  */
 package org.jboss.as.insights.extension;
 
-import static org.jboss.as.controller.PersistentResourceXMLDescription.builder;
+import static org.jboss.as.insights.extension.InsightsSubsystemDefinition.ATTRIBUTES;
 
 import org.jboss.as.controller.PersistentResourceXMLDescription;
 import org.jboss.as.controller.PersistentResourceXMLParser;
+
+import static org.jboss.as.controller.PersistentResourceXMLDescription.builder;
 
 /**
  *
@@ -33,26 +35,13 @@ import org.jboss.as.controller.PersistentResourceXMLParser;
  *
  */
 public class InsightsSubsystemParser extends PersistentResourceXMLParser {
+    private static final PersistentResourceXMLDescription XML_DESCRIPTION = builder(InsightsSubsystemDefinition.INSTANCE,
+            InsightsExtension.NAMESPACE).addAttributes(ATTRIBUTES).build();
 
     static final InsightsSubsystemParser INSTANCE = new InsightsSubsystemParser();
 
-    private static final PersistentResourceXMLDescription xmlDescription;
-
-    static {
-        xmlDescription = builder(InsightsSubsystemDefinition.INSTANCE,
-                InsightsExtension.NAMESPACE).addAttributes(
-                InsightsSubsystemDefinition.SCHEDULE_INTERVAL,
-                InsightsSubsystemDefinition.ENABLED,
-                InsightsSubsystemDefinition.RHNUID,
-                InsightsSubsystemDefinition.RHNPW,
-                InsightsSubsystemDefinition.PROXYUSER,
-                InsightsSubsystemDefinition.PROXYPASSWORD,
-                InsightsSubsystemDefinition.PROXYPORT,
-                InsightsSubsystemDefinition.PROXYURL).build();
-    }
-
     @Override
     public PersistentResourceXMLDescription getParserDescription() {
-        return xmlDescription;
+        return XML_DESCRIPTION;
     }
 }

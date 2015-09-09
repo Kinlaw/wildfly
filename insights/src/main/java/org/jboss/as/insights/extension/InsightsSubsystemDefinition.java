@@ -21,10 +21,11 @@
  */
 package org.jboss.as.insights.extension;
 
+
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.WEB_URL;
+
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.PersistentResourceDefinition;
@@ -34,9 +35,9 @@ import org.jboss.as.controller.capability.RuntimeCapability;
 import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.insights.api.InsightsScheduler;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.xnio.XnioWorker;
 
 /**
  * @author <a href="mailto:jkinlaw@redhat.com">Josh Kinlaw</a>
@@ -44,111 +45,96 @@ import org.xnio.XnioWorker;
 public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
 
     static final String INSIGHTS_RUNTIME_CAPABILITY_NAME = "org.jboss.as.insights";
-    static final RuntimeCapability<Void> Insights_RUNTIME_CAPABILITY = RuntimeCapability.Builder
-            .of(INSIGHTS_RUNTIME_CAPABILITY_NAME, true, XnioWorker.class)
+    static final RuntimeCapability<Void> INSIGHTS_RUNTIME_CAPABILITY = RuntimeCapability.Builder
+            .of(INSIGHTS_RUNTIME_CAPABILITY_NAME, true, InsightsScheduler.class)
             .build();
-
-    public static final InsightsSubsystemDefinition INSTANCE = new InsightsSubsystemDefinition();
 
     protected static final SimpleAttributeDefinition SCHEDULE_INTERVAL = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.SCHEDULE_INTERVAL, ModelType.LONG)
             .setAllowExpression(true)
             .setXmlName(InsightsExtension.SCHEDULE_INTERVAL)
             .setMeasurementUnit(MeasurementUnit.DAYS)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(
-                    new ModelNode(InsightsService.DEFAULT_SCHEDULE_INTERVAL))
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setDefaultValue(new ModelNode(InsightsService.DEFAULT_SCHEDULE_INTERVAL))
             .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition ENABLED = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.ENABLED, ModelType.BOOLEAN)
             .setAllowExpression(true).setXmlName(InsightsExtension.ENABLED)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
             .setDefaultValue(new ModelNode(false)).setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition RHNUID = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.RHNUID, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(null).setAllowNull(true).build();
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition RHNPW = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.RHNPW, ModelType.STRING).setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(null).setAllowNull(true).build();
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition PROXYUSER = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.PROXY_USER, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(null).setAllowNull(true).build();
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition PROXYPASSWORD = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.PROXY_PASSWORD, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(null).setAllowNull(true).build();
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition PROXYPORT = new SimpleAttributeDefinitionBuilder(
-            InsightsExtension.PROXY_PORT, ModelType.STRING)
+            InsightsExtension.PROXY_PORT, ModelType.INT)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(new ModelNode("-1")).setAllowNull(true).build();
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setDefaultValue(new ModelNode(-1)).setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition PROXYURL = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.PROXY_URL, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(null).setAllowNull(true).build();
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition INSIGHTSENDPOINT = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.INSIGHTS_ENDPOINT, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(
-                    new ModelNode(InsightsService.DEFAULT_INSIGHTS_ENDPOINT))
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setDefaultValue(new ModelNode(InsightsService.DEFAULT_INSIGHTS_ENDPOINT))
             .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition SYSTEMENDPOINT = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.SYSTEM_ENDPOINT, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(
-                    new ModelNode(InsightsService.DEFAULT_SYSTEM_ENDPOINT))
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
+            .setDefaultValue(new ModelNode(InsightsService.DEFAULT_SYSTEM_ENDPOINT))
             .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition URL = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.URL, ModelType.STRING).setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
             .setDefaultValue(new ModelNode(InsightsService.DEFAULT_BASE_URL))
+            .addArbitraryDescriptor(WEB_URL, new ModelNode(true))
             .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition USERAGENT = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.USER_AGENT, ModelType.STRING)
             .setAllowExpression(true)
-            .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
+            .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
             .setDefaultValue(new ModelNode(InsightsService.DEFAULT_USER_AGENT))
             .setAllowNull(true).build();
 
+    static final AttributeDefinition[] ATTRIBUTES = new AttributeDefinition[] {SCHEDULE_INTERVAL, ENABLED, RHNUID, RHNPW,
+        PROXYUSER, PROXYPASSWORD, PROXYPORT, PROXYURL, INSIGHTSENDPOINT, SYSTEMENDPOINT, URL, USERAGENT};
+
+    public static final InsightsSubsystemDefinition INSTANCE = new InsightsSubsystemDefinition();
+
     private InsightsSubsystemDefinition() {
-        super(InsightsExtension.SUBSYSTEM_PATH, InsightsExtension
-                .getResourceDescriptionResolver(null), SubsystemAdd.INSTANCE,
-                SubsystemRemove.INSTANCE);
-    }
-
-    static SimpleAttributeDefinition[] ATTRIBUTES = new SimpleAttributeDefinition[] {
-            SCHEDULE_INTERVAL, ENABLED, RHNUID, RHNPW, PROXYUSER,
-            PROXYPASSWORD, PROXYPORT, PROXYURL, INSIGHTSENDPOINT,
-            SYSTEMENDPOINT, URL, USERAGENT };
-
-    static final Map<String, SimpleAttributeDefinition> ATTRIBUTES_BY_XMLNAME;
-
-    static {
-        Map<String, SimpleAttributeDefinition> attrs = new HashMap<>();
-        for (AttributeDefinition attr : ATTRIBUTES) {
-            attrs.put(attr.getXmlName(), (SimpleAttributeDefinition) attr);
-        }
-        ATTRIBUTES_BY_XMLNAME = Collections.unmodifiableMap(attrs);
+        super(InsightsExtension.SUBSYSTEM_PATH, InsightsExtension.getResourceDescriptionResolver(null),
+                InsightsSubsystemAdd.INSTANCE, InsightsSubsystemRemove.INSTANCE);
     }
 
     /**
@@ -156,14 +142,13 @@ public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
      * handler if one was provided to the constructor.
      */
     @Override
-    public void registerOperations(
-            ManagementResourceRegistration resourceRegistration) {
+    public void registerOperations(ManagementResourceRegistration resourceRegistration) {
         super.registerOperations(resourceRegistration);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public Collection<AttributeDefinition> getAttributes() {
-        return (Collection) ATTRIBUTES_BY_XMLNAME.values();
+        return Arrays.asList(ATTRIBUTES);
     }
 }

@@ -21,6 +21,8 @@
  */
 package org.jboss.as.insights.extension;
 
+import static org.jboss.as.insights.extension.InsightsService.SERVICE_NAME;
+
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
@@ -37,8 +39,7 @@ public class InsightsRequestHandler implements OperationStepHandler {
 
     static final InsightsRequestHandler INSTANCE = new InsightsRequestHandler();
 
-    static final SimpleOperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder(
-            OPERATION_NAME,
+    static final SimpleOperationDefinition DEFINITION = new SimpleOperationDefinitionBuilder(OPERATION_NAME,
             InsightsExtension.getResourceDescriptionResolver(null))
             .setRuntimeOnly().addParameter(InsightsSubsystemDefinition.RHNUID)
             .addParameter(InsightsSubsystemDefinition.RHNPW)
@@ -51,60 +52,33 @@ public class InsightsRequestHandler implements OperationStepHandler {
     }
 
     @Override
-    public void execute(OperationContext context, ModelNode operation)
-            throws OperationFailedException {
+    public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
+        final String rhnUid = InsightsSubsystemDefinition.RHNUID.resolveModelAttribute(context, operation).asString();
+        final String rhnPw = InsightsSubsystemDefinition.RHNPW.resolveModelAttribute(context, operation).asString();
 
-        final String rhnUid = InsightsSubsystemDefinition.RHNUID
-                .resolveModelAttribute(context, operation).asString();// operation.require(InsightsExtension.RHNUID).asString();
-        final String rhnPw = InsightsSubsystemDefinition.RHNPW
-                .resolveModelAttribute(context, operation).asString();// operation.require(InsightsExtension.RHNPW).asString();
-
-        if (operation.has(InsightsExtension.PROXY_PASSWORD)
-                && operation.has(InsightsExtension.PROXY_USER)) {
-            String proxyPwd = InsightsSubsystemDefinition.PROXYPASSWORD
-                    .resolveModelAttribute(context, operation).asString();// operation.get(InsightsExtension.PROXY_PASSWORD).asString();
-            String proxyPort = InsightsSubsystemDefinition.PROXYPORT
-                    .resolveModelAttribute(context, operation).asString();// operation.get(InsightsExtension.PROXY_PORT).asString();
-            String proxyUrl = InsightsSubsystemDefinition.PROXYURL
-                    .resolveModelAttribute(context, operation).asString();// operation.get(InsightsExtension.PROXY_URL).asString();
-            String proxyUser = InsightsSubsystemDefinition.PROXYUSER
-                    .resolveModelAttribute(context, operation).asString();// operation.get(InsightsExtension.PROXY_USER).asString();
+        if (operation.hasDefined(InsightsExtension.PROXY_PASSWORD) && operation.hasDefined(InsightsExtension.PROXY_USER)) {
+            String proxyPwd = InsightsSubsystemDefinition.PROXYPASSWORD.resolveModelAttribute(context, operation).asString();
+            int proxyPort = InsightsSubsystemDefinition.PROXYPORT.resolveModelAttribute(context, operation).asInt();
+            String proxyUrl = InsightsSubsystemDefinition.PROXYURL.resolveModelAttribute(context, operation).asString();
+            String proxyUser = InsightsSubsystemDefinition.PROXYUSER.resolveModelAttribute(context, operation).asString();
             context.addStep(new OperationStepHandler() {
                 @Override
-                public void execute(OperationContext context,
-                        ModelNode operation) throws OperationFailedException {
-                    InsightsJdrScheduler scheduler = (InsightsJdrScheduler) context.getServiceRegistry(true)
-                            .getRequiredService(
-                                    InsightsService.createServiceName())
-                            .getValue();
-                    scheduler.setRhnUid(rhnUid);
-                    scheduler.setRhnPw(rhnPw);
-                    scheduler.setProxyUrl(proxyUrl);
-                    scheduler.setProxyPort(proxyPort);
-                    scheduler.setProxyUser(proxyUser);
-                    scheduler.setProxyPw(proxyPwd);
+                public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
+                    InsightsJdrScheduler scheduler = (InsightsJdrScheduler) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue();
+                    scheduler.enable(rhnUid, rhnPw, proxyUrl, proxyPort, proxyUser, proxyPwd);
                     scheduler.startScheduler();
                     context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
                 }
             }, OperationContext.Stage.RUNTIME);
-        } else if (operation.has(InsightsExtension.PROXY_PORT)
-                && operation.has(InsightsExtension.PROXY_URL)) {
-            String proxyPort = operation.get(InsightsExtension.PROXY_PORT)
-                    .asString();
-            String proxyUrl = operation.get(InsightsExtension.PROXY_URL)
-                    .asString();
+        } else if (operation.hasDefined(InsightsExtension.PROXY_PORT) && operation.hasDefined(InsightsExtension.PROXY_URL)) {
+            int proxyPort = operation.get(InsightsExtension.PROXY_PORT).asInt();
+            String proxyUrl = operation.get(InsightsExtension.PROXY_URL).asString();
             context.addStep(new OperationStepHandler() {
                 @Override
-                public void execute(OperationContext context,
-                        ModelNode operation) throws OperationFailedException {
+                public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
                     InsightsJdrScheduler scheduler = (InsightsJdrScheduler) context.getServiceRegistry(true)
-                            .getRequiredService(
-                                    InsightsService.createServiceName())
-                            .getValue();
-                    scheduler.setRhnUid(rhnUid);
-                    scheduler.setRhnPw(rhnPw);
-                    scheduler.setProxyUrl(proxyUrl);
-                    scheduler.setProxyPort(proxyPort);
+                            .getRequiredService(SERVICE_NAME).getValue();
+                    scheduler.enable(rhnUid, rhnPw, proxyUrl, proxyPort, null, null);
                     scheduler.startScheduler();
                     context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
                 }
@@ -112,19 +86,14 @@ public class InsightsRequestHandler implements OperationStepHandler {
         } else {
             context.addStep(new OperationStepHandler() {
                 @Override
-                public void execute(OperationContext context,
-                        ModelNode operation) throws OperationFailedException {
+                public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
                     InsightsJdrScheduler scheduler = (InsightsJdrScheduler) context.getServiceRegistry(true)
-                    .getRequiredService(
-                            InsightsService.createServiceName())
-                    .getValue();
-                    scheduler.setRhnUid(rhnUid);
-                    scheduler.setRhnPw(rhnPw);
+                            .getRequiredService(SERVICE_NAME).getValue();
+                    scheduler.enable(rhnUid, rhnPw);
                     scheduler.startScheduler();
                     context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
                 }
             }, OperationContext.Stage.RUNTIME);
         }
-        context.stepCompleted();
     }
 }

@@ -9,7 +9,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.text.ParseException;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -23,13 +22,14 @@ import org.jboss.as.jdr.JdrReportCollector;
 
 import com.redhat.gss.redhat_support_lib.api.API;
 import com.redhat.gss.redhat_support_lib.errors.RequestException;
+import org.jboss.msc.value.InjectedValue;
 
-public class InsightsJdrScheduler implements InsightsScheduler {
+class InsightsJdrScheduler implements InsightsScheduler {
 
     /**
      * Properties that can be set via the properties file.
      */
-    public static final String JDR_DESCRIPTION = "JDR for UUID {uuid}";
+    private static final String JDR_DESCRIPTION = "JDR for UUID {uuid}";
 
     /**
      * Endpoint of url which when added to the end of the url reveals the
@@ -45,31 +45,23 @@ public class InsightsJdrScheduler implements InsightsScheduler {
     private String systemEndpoint;
 
     private volatile boolean enabled = false;
-
     private volatile long scheduleInterval = 1;
 
     private String rhnUid;
-
     private String rhnPw;
-
     private String proxyUrl;
-
-    private String proxyPort;
-
+    private int proxyPort;
     private String proxyUser;
-
     private String proxyPw;
-
     private String url;
-
     private String userAgent;
 
     private API api;
 
-    private JdrReportCollector jdrCollector;
+    private final InjectedValue<JdrReportCollector> jdrCollector;
 
     private ScheduledFuture<?> insightsTask;
-    private ScheduledExecutorService scheduledExecutor;
+    private final ScheduledExecutorService scheduledExecutor;
 
     private class InsightsScheduleRunnable implements Runnable {
         @Override
@@ -84,33 +76,25 @@ public class InsightsJdrScheduler implements InsightsScheduler {
 
     private final InsightsScheduleRunnable insightsRunnable = new InsightsScheduleRunnable();
 
-    public InsightsJdrScheduler(long scheduleInterval, String rhnUid,
-            String rhnPw, String proxyUrl, String proxyPort, String proxyUser,
-            String proxyPw, String url, String userAgent,
-            String systemEndpoint, String insightsEndpoint, JdrReportCollector jdrCollector) {
-        scheduledExecutor = Executors.newScheduledThreadPool(1);
-        this.scheduleInterval = scheduleInterval;
-        this.systemEndpoint = systemEndpoint;
-        this.insightsEndpoint = insightsEndpoint;
-        this.rhnUid = rhnUid;
-        this.rhnPw = rhnPw;
-        this.url = url;
-        this.proxyPw = proxyPw;
-        this.proxyUser = proxyUser;
-        this.proxyUrl = proxyUrl;
-        this.userAgent = userAgent;
-        this.proxyPort = proxyPort;
+    public InsightsJdrScheduler(ScheduledExecutorService scheduledExecutor, InsightsConfiguration config, InjectedValue<JdrReportCollector> jdrCollector) {
+        this.scheduledExecutor = scheduledExecutor;
+        this.scheduleInterval = config.getScheduleInterval();
+        this.systemEndpoint = config.getSystemEndpoint();
+        this.insightsEndpoint = config.getInsightsEndpoint();
+        this.rhnUid = config.getRhnUid();
+        this.rhnPw = config.getRhnPw();
+        this.url = config.getUrl();
+        this.proxyPw = config.getProxyPw();
+        this.proxyUser = config.getProxyUser();
+        this.proxyUrl = config.getProxyUrl();
+        this.userAgent = config.getUserAgent();
+        this.proxyPort = config.getProxyPort();
         this.jdrCollector = jdrCollector;
+        setupApi();
     }
 
     private void setupApi() {
-        int proxyPortInt = -1;
-        URL proxyUrlUrl = null;
-        try {
-            proxyPortInt = Integer.parseInt(proxyPort);
-        } catch (NumberFormatException e) {
-            proxyPortInt = -1;
-        }
+        URL proxyUrlUrl;
         try {
             proxyUrlUrl = new URL(proxyUrl);
         } catch (MalformedURLException e) {
@@ -122,8 +106,7 @@ public class InsightsJdrScheduler implements InsightsScheduler {
         if (rhnPw == null) {
             ROOT_LOGGER.rhnPwIsNull();
         }
-        api = new API(this.rhnUid, this.rhnPw, this.url, this.proxyUser,
-                this.proxyPw, proxyUrlUrl, proxyPortInt, this.userAgent);
+        api = new API(rhnUid, rhnPw, url, proxyUser, proxyPw, proxyUrlUrl, proxyPort, userAgent);
     }
 
     @Override
@@ -132,19 +115,19 @@ public class InsightsJdrScheduler implements InsightsScheduler {
     }
 
     @Override
-    public long getScheduleInterval() {
-        return scheduleInterval;
-    }
-
-    @Override
     public void setScheduleInterval(long scheduleInterval) {
+        boolean enabled = this.enabled;
+        if(enabled) {
+            stopScheduler();
+        }
         this.scheduleInterval = scheduleInterval;
+        this.enabled = enabled;
+        startSchedule();
     }
 
     @Override
     public void startScheduler() {
         final boolean enabled = this.enabled;
-        System.out.println("enabled: " + enabled);
         if (enabled) {
             return;
         }
@@ -177,13 +160,12 @@ public class InsightsJdrScheduler implements InsightsScheduler {
             if (scheduleInterval <= 0) {
                 scheduleInterval = InsightsService.DEFAULT_SCHEDULE_INTERVAL;
             }
-            insightsTask = scheduledExecutor.scheduleWithFixedDelay(
-                    insightsRunnable, 0, scheduleInterval, TimeUnit.DAYS);
+            insightsTask = scheduledExecutor.scheduleWithFixedDelay(insightsRunnable, 0, scheduleInterval, TimeUnit.DAYS);
         }
     }
 
-    public void sendJdr() throws OperationFailedException {
-        JdrReport report = jdrCollector.collect();
+    protected void sendJdr() throws OperationFailedException {
+        JdrReport report = jdrCollector.getValue().collect();
         String fileName = report.getLocation();
         String uuid = report.getJdrUuid();
         String description = JDR_DESCRIPTION.replace("{uuid}", uuid);
@@ -194,8 +176,8 @@ public class InsightsJdrScheduler implements InsightsScheduler {
             systemUrl = systemEndpoint;
             api.getInsights();
             Response response = api.getInsights().get(systemUrl + uuid);
-            com.redhat.gss.redhat_support_lib.infrastructure.System system = response
-                    .readEntity(com.redhat.gss.redhat_support_lib.infrastructure.System.class);
+            com.redhat.gss.redhat_support_lib.infrastructure.System system = response.readEntity(
+                    com.redhat.gss.redhat_support_lib.infrastructure.System.class);
             // if system is unregistered then attempt to register system
             if (system.getUnregistered_at() != null) {
                 api.getInsights().addSystem(systemUrl, uuid,
@@ -203,29 +185,20 @@ public class InsightsJdrScheduler implements InsightsScheduler {
             }
         } catch (RequestException e) {
             // if the system was not found then attempt to register the system
-            if (e.getMessage().contains(
-                    "" + Response.Status.NOT_FOUND.getStatusCode())) {
+            if (e.getMessage().contains("" + Response.Status.NOT_FOUND.getStatusCode())) {
                 try {
-                    api.getInsights().addSystem(systemUrl, uuid,
-                            InetAddress.getLocalHost().getHostName());
-                } catch (RequestException exception) {
-                    ROOT_LOGGER.couldNotRegisterSystem(exception);
-                } catch (MalformedURLException exception) {
-                    ROOT_LOGGER.couldNotRegisterSystem(exception);
-                } catch (UnknownHostException exception) {
+                    api.getInsights().addSystem(systemUrl, uuid, InetAddress.getLocalHost().getHostName());
+                } catch (RequestException | MalformedURLException | UnknownHostException exception) {
                     ROOT_LOGGER.couldNotRegisterSystem(exception);
                 }
             } else {
                 ROOT_LOGGER.couldNotRegisterSystem(e);
             }
-        } catch (MalformedURLException e) {
-            ROOT_LOGGER.couldNotFindSystem(e);
-        } catch (UnknownHostException e) {
+        } catch (MalformedURLException | UnknownHostException e) {
             ROOT_LOGGER.couldNotFindSystem(e);
         }
         try {
-            api.getInsights().upload((insightsEndpoint + uuid), file,
-                    description);
+            api.getInsights().upload((insightsEndpoint + uuid), file, description);
         } catch (FileNotFoundException e) {
             wasSuccessful = false;
             ROOT_LOGGER.couldNotFindJdr(e);
@@ -241,7 +214,7 @@ public class InsightsJdrScheduler implements InsightsScheduler {
     @Override
     public void setRhnUid(String rhnUid) {
         this.rhnUid = rhnUid;
-
+        setupApi();
     }
 
     @Override
@@ -252,11 +225,13 @@ public class InsightsJdrScheduler implements InsightsScheduler {
     @Override
     public void setProxyUrl(String proxyUrl) {
         this.proxyUrl = proxyUrl;
+        setupApi();
     }
 
     @Override
-    public void setProxyPort(String proxyPort) {
+    public void setProxyPort(int proxyPort) {
         this.proxyPort = proxyPort;
+        setupApi();
     }
 
     @Override
@@ -287,5 +262,23 @@ public class InsightsJdrScheduler implements InsightsScheduler {
     @Override
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
+        setupApi();
+    }
+
+    @Override
+    public void enable(String rhnUid, String rhnPw) {
+        enable(rhnUid, rhnPw, null, -1, null, null);
+    }
+
+    @Override
+    public void enable(String rhnUid, String rhnPw, String proxyUrl, int proxyPort, String proxyUser, String proxyPwd) {
+        this.rhnUid = rhnUid;
+        this.rhnPw = rhnPw;
+        this.proxyUrl = proxyUrl;
+        this.proxyPort = proxyPort;
+        this.proxyUser = proxyUser;
+        this.proxyPw = proxyPwd;
+        this.enabled = true;
+        setupApi();
     }
 }

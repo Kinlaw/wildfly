@@ -64,8 +64,8 @@ public interface InsightsLogger extends BasicLogger {
      *            new frequency value
      */
     @LogMessage(level = INFO)
-    @Message(id = 3, value = "Frequency of Insights Subsystem updated to %s")
-    void scheduleIntervalUpdated(String var);
+    @Message(id = 3, value = "Frequency of Insights Subsystem updated to %s days")
+    void scheduleIntervalUpdated(long var);
 
     /**
      * System was enabled
@@ -153,16 +153,16 @@ public interface InsightsLogger extends BasicLogger {
 
     /**
      * RHN UID is not valid
+     * @return
      */
-    @LogMessage(level = ERROR)
     @Message(id = 16, value = "RHN UID cannot be null")
-    void rhnUidIsNull();
+    IllegalArgumentException rhnUidIsNull();
 
     /**
      * RHN PW is not valid
+     * @return
      */
-    @LogMessage(level = ERROR)
-    @Message(id = 17, value = "RHN PW cannot be null")
-    void rhnPwIsNull();
+    @Message(id = 17, value = "RHN password cannot be null")
+    IllegalArgumentException rhnPwIsNull();
 
 }

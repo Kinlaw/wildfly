@@ -38,26 +38,25 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUB
  */
 public class InsightsExtension implements Extension {
 
-    protected static final String ENABLED = "enabled";
-    protected static final String SCHEDULE_INTERVAL = "schedule-interval";
-    protected static final String RHNPW = "rhn-pw";
-    protected static final String RHNUID = "rhn-uid";
+    public static final String ENABLED = "enabled";
+    public static final String SCHEDULE_INTERVAL = "schedule-interval";
+    public static final String RHNPW = "rhn-pw";
+    public static final String RHNUID = "rhn-uid";
     public static final String PROXY_USER = "proxy-user";
     public static final String PROXY_PASSWORD = "proxy-password";
     public static final String PROXY_URL = "proxy-url";
     public static final String PROXY_PORT = "proxy-port";
-    protected static final String TYPE = "insights-type";
-    protected static final String INSIGHTS_ENDPOINT = "insights-endpoint";
-    protected static final String SYSTEM_ENDPOINT = "system-endpoint";
-    protected static final String URL = "url";
-    protected static final String USER_AGENT = "user-agent";
-    protected static final PathElement TYPE_PATH = PathElement
-            .pathElement(TYPE);
+    public static final String TYPE = "insights-type";
+    public static final String INSIGHTS_ENDPOINT = "insights-endpoint";
+    public static final String SYSTEM_ENDPOINT = "system-endpoint";
+    public static final String URL = "url";
+    public static final String USER_AGENT = "user-agent";
+    public static final PathElement TYPE_PATH = PathElement.pathElement(TYPE);
 
     /**
      * The name space used for the {@code subsystem} element
      */
-    public static final String NAMESPACE = "urn:org.jboss.as.insights:1.0";;
+    public static final String NAMESPACE = "urn:org.jboss.as.insights:1.0";
 
     /**
      * The name of our subsystem within the model.
@@ -79,12 +78,9 @@ public class InsightsExtension implements Extension {
     private static final String RESOURCE_NAME = InsightsExtension.class
             .getPackage().getName() + ".LocalDescriptions";
 
-    static StandardResourceDescriptionResolver getResourceDescriptionResolver(
-            final String keyPrefix) {
-        String prefix = SUBSYSTEM_NAME
-                + (keyPrefix == null ? "" : "." + keyPrefix);
-        return new StandardResourceDescriptionResolver(prefix, RESOURCE_NAME,
-                InsightsExtension.class.getClassLoader(), true, true);
+    static StandardResourceDescriptionResolver getResourceDescriptionResolver(final String keyPrefix) {
+        String prefix = SUBSYSTEM_NAME+ (keyPrefix == null ? "" : "." + keyPrefix);
+        return new StandardResourceDescriptionResolver(prefix, RESOURCE_NAME, InsightsExtension.class.getClassLoader(), true, true);
     }
 
     @Override
