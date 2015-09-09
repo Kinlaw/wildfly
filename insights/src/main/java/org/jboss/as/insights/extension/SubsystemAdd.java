@@ -30,6 +30,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceTarget;
 
 /**
  * Handler responsible for adding the subsystem resource to the model
@@ -45,36 +46,49 @@ class SubsystemAdd extends AbstractBoottimeAddStepHandler {
 
     /** {@inheritDoc} */
     @Override
-    protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
-        InsightsSubsystemDefinition.FREQUENCY.validateAndSet(operation, model);
+    protected void populateModel(ModelNode operation, ModelNode model)
+            throws OperationFailedException {
+        InsightsSubsystemDefinition.SCHEDULE_INTERVAL.validateAndSet(operation,
+                model);
         InsightsSubsystemDefinition.ENABLED.validateAndSet(operation, model);
         InsightsSubsystemDefinition.RHNUID.validateAndSet(operation, model);
         InsightsSubsystemDefinition.RHNPW.validateAndSet(operation, model);
         InsightsSubsystemDefinition.PROXYUSER.validateAndSet(operation, model);
-        InsightsSubsystemDefinition.PROXYPASSWORD.validateAndSet(operation, model);
+        InsightsSubsystemDefinition.PROXYPASSWORD.validateAndSet(operation,
+                model);
         InsightsSubsystemDefinition.PROXYPORT.validateAndSet(operation, model);
         InsightsSubsystemDefinition.PROXYURL.validateAndSet(operation, model);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void performBoottime(OperationContext context, ModelNode operation, ModelNode model)
-            throws OperationFailedException {
+    public void performBoottime(OperationContext context, ModelNode operation,
+            ModelNode model) throws OperationFailedException {
 
-        long frequency = InsightsSubsystemDefinition.FREQUENCY.resolveModelAttribute(context, model).asLong();
-        boolean enabled = InsightsSubsystemDefinition.ENABLED.resolveModelAttribute(context, model).asBoolean();
-        String insightsEndpoint = InsightsSubsystemDefinition.INSIGHTSENDPOINT.resolveModelAttribute(context, operation).asString();
-        String systemEndpoint = InsightsSubsystemDefinition.SYSTEMENDPOINT.resolveModelAttribute(context, operation).asString();
-        String url = InsightsSubsystemDefinition.URL.resolveModelAttribute(context, operation).asString();
-        String userAgent = InsightsSubsystemDefinition.USERAGENT.resolveModelAttribute(context, operation).asString();
-        InsightsService service = InsightsService.getInstance(frequency, enabled, insightsEndpoint, systemEndpoint, url, userAgent);
+        long frequency = InsightsSubsystemDefinition.SCHEDULE_INTERVAL
+                .resolveModelAttribute(context, model).asLong();
+        boolean enabled = InsightsSubsystemDefinition.ENABLED
+                .resolveModelAttribute(context, model).asBoolean();
+        String insightsEndpoint = InsightsSubsystemDefinition.INSIGHTSENDPOINT
+                .resolveModelAttribute(context, operation).asString();
+        String systemEndpoint = InsightsSubsystemDefinition.SYSTEMENDPOINT
+                .resolveModelAttribute(context, operation).asString();
+        String url = InsightsSubsystemDefinition.URL.resolveModelAttribute(
+                context, operation).asString();
+        String userAgent = InsightsSubsystemDefinition.USERAGENT
+                .resolveModelAttribute(context, operation).asString();
+        final ServiceTarget serviceTarget = context.getServiceTarget();
+        InsightsService service = InsightsService.getInstance(serviceTarget,
+                frequency, enabled, insightsEndpoint, systemEndpoint, url,
+                userAgent);
         ServiceName name = InsightsService.createServiceName();
         ServiceRegistry registry = context.getServiceRegistry(false);
-        JdrReportCollector jdrCollector = JdrReportCollector.class.cast(registry.getRequiredService(JdrReportService.SERVICE_NAME).getValue());
+        JdrReportCollector jdrCollector = JdrReportCollector.class
+                .cast(registry
+                        .getRequiredService(JdrReportService.SERVICE_NAME)
+                        .getValue());
         service.setJdrReportCollector(jdrCollector);
-        context.getServiceTarget()
-                .addService(name, service)
-                .setInitialMode(Mode.ACTIVE)
-                .install();
+        context.getServiceTarget().addService(name, service)
+                .setInitialMode(Mode.ACTIVE).install();
     }
 }

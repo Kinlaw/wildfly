@@ -39,7 +39,7 @@ import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUB
 public class InsightsExtension implements Extension {
 
     protected static final String ENABLED = "enabled";
-    protected static final String FREQUENCY = "frequency";
+    protected static final String SCHEDULE_INTERVAL = "schedule-interval";
     protected static final String RHNPW = "rhn-pw";
     protected static final String RHNUID = "rhn-uid";
     public static final String PROXY_USER = "proxy-user";
@@ -51,7 +51,8 @@ public class InsightsExtension implements Extension {
     protected static final String SYSTEM_ENDPOINT = "system-endpoint";
     protected static final String URL = "url";
     protected static final String USER_AGENT = "user-agent";
-    protected static final PathElement TYPE_PATH = PathElement.pathElement(TYPE);
+    protected static final PathElement TYPE_PATH = PathElement
+            .pathElement(TYPE);
 
     /**
      * The name space used for the {@code subsystem} element
@@ -73,12 +74,17 @@ public class InsightsExtension implements Extension {
      */
     private final InsightsSubsystemParser parser = new InsightsSubsystemParser();
 
-    protected static final PathElement SUBSYSTEM_PATH = PathElement.pathElement(SUBSYSTEM, SUBSYSTEM_NAME);
-    private static final String RESOURCE_NAME = InsightsExtension.class.getPackage().getName() + ".LocalDescriptions";
+    protected static final PathElement SUBSYSTEM_PATH = PathElement
+            .pathElement(SUBSYSTEM, SUBSYSTEM_NAME);
+    private static final String RESOURCE_NAME = InsightsExtension.class
+            .getPackage().getName() + ".LocalDescriptions";
 
-    static StandardResourceDescriptionResolver getResourceDescriptionResolver(final String keyPrefix) {
-        String prefix = SUBSYSTEM_NAME + (keyPrefix == null ? "" : "." + keyPrefix);
-        return new StandardResourceDescriptionResolver(prefix, RESOURCE_NAME, InsightsExtension.class.getClassLoader(), true, true);
+    static StandardResourceDescriptionResolver getResourceDescriptionResolver(
+            final String keyPrefix) {
+        String prefix = SUBSYSTEM_NAME
+                + (keyPrefix == null ? "" : "." + keyPrefix);
+        return new StandardResourceDescriptionResolver(prefix, RESOURCE_NAME,
+                InsightsExtension.class.getClassLoader(), true, true);
     }
 
     @Override
@@ -88,11 +94,17 @@ public class InsightsExtension implements Extension {
 
     @Override
     public void initialize(ExtensionContext context) {
-        final SubsystemRegistration subsystem = context.registerSubsystem(SUBSYSTEM_NAME, ModelVersion.create(MAJOR_VERSION));
-        final ManagementResourceRegistration registration = subsystem.registerSubsystemModel(InsightsSubsystemDefinition.INSTANCE);
-        registration.registerOperationHandler(GenericSubsystemDescribeHandler.DEFINITION, GenericSubsystemDescribeHandler.INSTANCE);
+        final SubsystemRegistration subsystem = context.registerSubsystem(
+                SUBSYSTEM_NAME, ModelVersion.create(MAJOR_VERSION));
+        final ManagementResourceRegistration registration = subsystem
+                .registerSubsystemModel(InsightsSubsystemDefinition.INSTANCE);
+        registration.registerOperationHandler(
+                GenericSubsystemDescribeHandler.DEFINITION,
+                GenericSubsystemDescribeHandler.INSTANCE);
         if (context.isRuntimeOnlyRegistrationValid()) {
-            registration.registerOperationHandler(InsightsRequestHandler.DEFINITION, InsightsRequestHandler.INSTANCE);
+            registration.registerOperationHandler(
+                    InsightsRequestHandler.DEFINITION,
+                    InsightsRequestHandler.INSTANCE);
         }
         subsystem.registerXMLElementWriter(parser);
     }

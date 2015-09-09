@@ -31,6 +31,7 @@ import org.jboss.as.controller.PersistentResourceDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinition;
 import org.jboss.as.controller.SimpleAttributeDefinitionBuilder;
 import org.jboss.as.controller.capability.RuntimeCapability;
+import org.jboss.as.controller.client.helpers.MeasurementUnit;
 import org.jboss.as.controller.registry.AttributeAccess;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
@@ -49,11 +50,15 @@ public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
 
     public static final InsightsSubsystemDefinition INSTANCE = new InsightsSubsystemDefinition();
 
-    protected static final SimpleAttributeDefinition FREQUENCY = new SimpleAttributeDefinitionBuilder(
-            InsightsExtension.FREQUENCY, ModelType.LONG)
-            .setAllowExpression(true).setXmlName(InsightsExtension.FREQUENCY)
+    protected static final SimpleAttributeDefinition SCHEDULE_INTERVAL = new SimpleAttributeDefinitionBuilder(
+            InsightsExtension.SCHEDULE_INTERVAL, ModelType.LONG)
+            .setAllowExpression(true)
+            .setXmlName(InsightsExtension.SCHEDULE_INTERVAL)
+            .setMeasurementUnit(MeasurementUnit.DAYS)
             .setFlags(AttributeAccess.Flag.RESTART_ALL_SERVICES)
-            .setDefaultValue(new ModelNode(InsightsService.DEFAULT_FREQUENCY)).setAllowNull(true).build();
+            .setDefaultValue(
+                    new ModelNode(InsightsService.DEFAULT_SCHEDULE_INTERVAL))
+            .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition ENABLED = new SimpleAttributeDefinitionBuilder(
             InsightsExtension.ENABLED, ModelType.BOOLEAN)
@@ -132,9 +137,9 @@ public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
     }
 
     static SimpleAttributeDefinition[] ATTRIBUTES = new SimpleAttributeDefinition[] {
-            FREQUENCY, ENABLED, RHNUID, RHNPW, PROXYUSER, PROXYPASSWORD,
-            PROXYPORT, PROXYURL, INSIGHTSENDPOINT, SYSTEMENDPOINT, URL,
-            USERAGENT };
+            SCHEDULE_INTERVAL, ENABLED, RHNUID, RHNPW, PROXYUSER,
+            PROXYPASSWORD, PROXYPORT, PROXYURL, INSIGHTSENDPOINT,
+            SYSTEMENDPOINT, URL, USERAGENT };
 
     static final Map<String, SimpleAttributeDefinition> ATTRIBUTES_BY_XMLNAME;
 

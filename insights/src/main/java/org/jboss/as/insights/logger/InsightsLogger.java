@@ -40,8 +40,8 @@ public interface InsightsLogger extends BasicLogger {
     /**
      * A logger with the category of the default insights package.
      */
-    InsightsLogger ROOT_LOGGER = Logger.getMessageLogger(
-            InsightsLogger.class, "org.jboss.as.insights.extension");
+    InsightsLogger ROOT_LOGGER = Logger.getMessageLogger(InsightsLogger.class,
+            "org.jboss.as.insights.extension");
 
     /**
      * Insights could not create JDR.
@@ -65,7 +65,7 @@ public interface InsightsLogger extends BasicLogger {
      */
     @LogMessage(level = INFO)
     @Message(id = 3, value = "Frequency of Insights Subsystem updated to %s")
-    void frequencyUpdated(String var);
+    void scheduleIntervalUpdated(String var);
 
     /**
      * System was enabled
@@ -150,5 +150,19 @@ public interface InsightsLogger extends BasicLogger {
     @LogMessage(level = ERROR)
     @Message(id = 15, value = "Could not write frequency to properties file")
     void couldNotWriteFrequency(@Cause Throwable cause);
+
+    /**
+     * RHN UID is not valid
+     */
+    @LogMessage(level = ERROR)
+    @Message(id = 16, value = "RHN UID cannot be null")
+    void rhnUidIsNull();
+
+    /**
+     * RHN PW is not valid
+     */
+    @LogMessage(level = ERROR)
+    @Message(id = 17, value = "RHN PW cannot be null")
+    void rhnPwIsNull();
 
 }

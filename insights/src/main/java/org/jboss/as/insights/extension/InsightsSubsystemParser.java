@@ -41,7 +41,7 @@ public class InsightsSubsystemParser extends PersistentResourceXMLParser {
     static {
         xmlDescription = builder(InsightsSubsystemDefinition.INSTANCE,
                 InsightsExtension.NAMESPACE).addAttributes(
-                InsightsSubsystemDefinition.FREQUENCY,
+                InsightsSubsystemDefinition.SCHEDULE_INTERVAL,
                 InsightsSubsystemDefinition.ENABLED,
                 InsightsSubsystemDefinition.RHNUID,
                 InsightsSubsystemDefinition.RHNPW,

@@ -37,10 +37,15 @@ public class InsightsEnabledHandler extends AbstractWriteAttributeHandler<Void> 
         super(InsightsSubsystemDefinition.ENABLED);
     }
 
-    protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
-            ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<Void> handbackHolder) throws OperationFailedException {
+    protected boolean applyUpdateToRuntime(OperationContext context,
+            ModelNode operation, String attributeName, ModelNode resolvedValue,
+            ModelNode currentValue, HandbackHolder<Void> handbackHolder)
+            throws OperationFailedException {
         if (attributeName.equals(InsightsExtension.ENABLED)) {
-            InsightsService service = (InsightsService) context.getServiceRegistry(true).getRequiredService(InsightsService.createServiceName()).getValue();
+            InsightsService service = (InsightsService) context
+                    .getServiceRegistry(true)
+                    .getRequiredService(InsightsService.createServiceName())
+                    .getValue();
             service.setEnabled(resolvedValue.asBoolean());
             context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
         }
@@ -49,20 +54,32 @@ public class InsightsEnabledHandler extends AbstractWriteAttributeHandler<Void> 
 
     /**
      * Hook to allow subclasses to revert runtime changes made in
-     * {@link #applyUpdateToRuntime(OperationContext, ModelNode, String, ModelNode, ModelNode, HandbackHolder)}.
+     * {@link #applyUpdateToRuntime(OperationContext, ModelNode, String, ModelNode, ModelNode, HandbackHolder)}
+     * .
      *
-     * @param context        the context of the operation
-     * @param operation      the operation
-     * @param attributeName  the name of the attribute being modified
-     * @param valueToRestore the previous value for the attribute, before this operation was executed
-     * @param valueToRevert  the new value for the attribute that should be reverted
-     * @param handback       an object, if any, passed in to the {@code handbackHolder} by the {@code applyUpdateToRuntime}
-     *                       implementation
+     * @param context
+     *            the context of the operation
+     * @param operation
+     *            the operation
+     * @param attributeName
+     *            the name of the attribute being modified
+     * @param valueToRestore
+     *            the previous value for the attribute, before this operation
+     *            was executed
+     * @param valueToRevert
+     *            the new value for the attribute that should be reverted
+     * @param handback
+     *            an object, if any, passed in to the {@code handbackHolder} by
+     *            the {@code applyUpdateToRuntime} implementation
      */
-    protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
-          ModelNode valueToRestore, ModelNode valueToRevert, Void handback) {
+    protected void revertUpdateToRuntime(OperationContext context,
+            ModelNode operation, String attributeName,
+            ModelNode valueToRestore, ModelNode valueToRevert, Void handback) {
         if (attributeName.equals(InsightsExtension.ENABLED)) {
-            InsightsService service = (InsightsService) context.getServiceRegistry(true).getRequiredService(InsightsService.createServiceName()).getValue();
+            InsightsService service = (InsightsService) context
+                    .getServiceRegistry(true)
+                    .getRequiredService(InsightsService.createServiceName())
+                    .getValue();
             service.setEnabled(valueToRestore.asBoolean());
             context.completeStep(OperationContext.ResultHandler.NOOP_RESULT_HANDLER);
         }

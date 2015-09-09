@@ -21,25 +21,22 @@
  */
 package org.jboss.as.insights.extension;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.UnknownHostException;
-import java.text.ParseException;
 
-import javax.ws.rs.core.Response;
-
-import org.jboss.as.jdr.JdrReport;
+import org.jboss.as.controller.services.path.PathManagerService;
+import org.jboss.as.insights.api.InsightsScheduler;
 import org.jboss.as.jdr.JdrReportCollector;
 import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 
-import com.redhat.gss.redhat_support_lib.errors.RequestException;
 import com.redhat.gss.redhat_support_lib.api.API;
 
 import static org.jboss.as.insights.logger.InsightsLogger.ROOT_LOGGER;
@@ -47,13 +44,8 @@ import static org.jboss.as.insights.logger.InsightsLogger.ROOT_LOGGER;
 /**
  * @author <a href="mailto:jkinlaw@redhat.com">Josh Kinlaw</a>
  */
-public class InsightsService implements Service<InsightsService> {
+public class InsightsService implements Service<InsightsScheduler> {
 
-    public static final long MILLISECOND_TO_DAY = 86400000;
-
-    /**
-     * Properties that can be set via the properties file.
-     */
     public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
     public static final String URL = "url";
@@ -65,19 +57,19 @@ public class InsightsService implements Service<InsightsService> {
     public static final String SYSTEM_ENDPOINT = "systemEndpoint";
     public static final String USER_AGENT = "userAgent";
 
-    public static final String JDR_DESCRIPTION = "JDR for UUID {uuid}";
-
     public static final String JBOSS_PROPERTY_DIR = "jboss.server.data.dir";
 
     public static final String INSIGHTS_PROPERTY_FILE_NAME = "insights.properties";
 
     public static final String INSIGHTS_DESCRIPTION = "Properties file consisting of RHN login information and insights/insights URL";
 
-    public static final int DEFAULT_FREQUENCY = 1;
+    public static final int DEFAULT_SCHEDULE_INTERVAL = 1;
     public static final String DEFAULT_BASE_URL = "https://api.access.redhat.com";
     public static final String DEFAULT_INSIGHTS_ENDPOINT = "/r/insights/v1/uploads/";
     public static final String DEFAULT_SYSTEM_ENDPOINT = "/r/insights/v1/systems/";
     public static final String DEFAULT_USER_AGENT = "redhat-support-lib-java";
+
+    private InsightsJdrScheduler scheduler;
 
     /**
      * Endpoint of url which when added to the end of the url reveals the
@@ -94,7 +86,7 @@ public class InsightsService implements Service<InsightsService> {
 
     private boolean enabled = true;
 
-    private long frequency = 1;
+    private long scheduleInterval = 1;
 
     private String rhnUid;
 
@@ -114,77 +106,92 @@ public class InsightsService implements Service<InsightsService> {
 
     private JdrReportCollector jdrCollector;
 
-    private Thread output = initializeOutput();
-
     private API api;
 
-    private InsightsService(long tick, boolean enabled, String insightsEndpoint,
+    private final ServiceTarget serviceTarget;
+
+    public ServiceController<InsightsScheduler> addScheduler() {
+        System.out.println("addScheduler");
+        final ServiceName serviceName = InsightsScheduler.BASE_SERVICE_NAME;
+        ServiceBuilder<InsightsScheduler> builder = serviceTarget.addService(
+                serviceName, this).addDependency(
+                PathManagerService.SERVICE_NAME);
+        ServiceController<InsightsScheduler> svc = builder.setInitialMode(
+                Mode.NEVER).install();
+        System.out.println("addScheduler finished");
+        return svc;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void start(StartContext context) throws StartException {
+        System.out.println("start");
+        try {
+            // if this is the first start we want to use the same scheduler that
+            // was used at boot time
+            if (scheduler == null) {
+                final InsightsJdrScheduler scheduler = new InsightsJdrScheduler(
+                        scheduleInterval, rhnUid, rhnPw, proxyUrl, proxyPort,
+                        proxyUser, proxyPw, url, userAgent, systemEndpoint,
+                        insightsEndpoint, jdrCollector);
+                this.scheduler = scheduler;
+            }
+            if (enabled) {
+                scheduler.startScheduler();
+            }
+        } catch (Exception e) {
+            throw new StartException(e);
+        }
+        System.out.println("start finished");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void stop(StopContext context) {
+        final InsightsJdrScheduler scheduler = this.scheduler;
+        this.scheduler = null;
+        scheduler.stopScheduler();
+    }
+
+    private InsightsService(final ServiceTarget serviceTarget,
+            long scheduleInterval, boolean enabled, String insightsEndpoint,
             String systemEndpoint, String url, String userAgent) {
-        this.frequency = tick;
+        this.serviceTarget = serviceTarget;
+        this.scheduleInterval = scheduleInterval;
         this.enabled = enabled;
         this.insightsEndpoint = insightsEndpoint;
         this.systemEndpoint = systemEndpoint;
         this.url = url;
         this.userAgent = userAgent;
-        setConnectionManager();
+        addScheduler();
     }
 
-    public static InsightsService getInstance(long tick, boolean enabled, String insightsEndpoint,
-        String systemEndpoint, String url, String userAgent) {
-        InsightsService instance = new InsightsService(tick, enabled, insightsEndpoint, systemEndpoint,
-                        url, userAgent);
+    public static InsightsService getInstance(ServiceTarget serviceTarget,
+            long scheduleInterval, boolean enabled, String insightsEndpoint,
+            String systemEndpoint, String url, String userAgent) {
+        InsightsService instance = new InsightsService(serviceTarget,
+                scheduleInterval, enabled, insightsEndpoint, systemEndpoint,
+                url, userAgent);
         return instance;
     }
 
-    private Thread initializeOutput() {
-        return new Thread() {
-            @Override
-            public void run() {
-                synchronized (output) {
-                    while (enabled) {
-                        try {
-                            JdrReport report = jdrCollector.collect();
-                            sendJdr(report.getLocation(), report.getJdrUuid());
-                        } catch (Exception e) {
-                            ROOT_LOGGER.couldNotGenerateJdr(e);
-                        }
-                        try {
-                            output.wait(frequency * MILLISECOND_TO_DAY);
-                        } catch (InterruptedException e) {
-                            ROOT_LOGGER.threadInterrupted(e);
-                            return;
-                        }
-                    }
-                }
-            }
-        };
-    }
-
     @Override
-    public void start(StartContext arg0) throws StartException {
-        output.start();
-    }
-
-    @Override
-    public void stop(StopContext arg0) {
-        if (output != null && output.isAlive()) {
-            output.interrupt();
-        }
-    }
-
-    @Override
-    public InsightsService getValue() throws IllegalStateException,
+    public InsightsScheduler getValue() throws IllegalStateException,
             IllegalArgumentException {
-        return this;
+        return scheduler;
     }
 
-    void setFrequency(long frequency) {
-        ROOT_LOGGER.frequencyUpdated("" + frequency);
-        this.frequency = frequency;
+    void setFrequency(long scheduleInterval) {
+        ROOT_LOGGER.scheduleIntervalUpdated("" + scheduleInterval);
+        this.scheduleInterval = scheduleInterval;
     }
 
     public long getFrequency() {
-        return this.frequency;
+        return this.scheduleInterval;
     }
 
     public boolean getEnabled() {
@@ -193,19 +200,15 @@ public class InsightsService implements Service<InsightsService> {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-        if (enabled && (output == null || !output.isAlive())) {
+        if (enabled) {
             ROOT_LOGGER.insightsEnabled();
-            output = initializeOutput();
             try {
-                this.start(null);
+                start(null);
             } catch (StartException e) {
                 ROOT_LOGGER.couldNotStartThread(e);
             }
         } else if (!enabled) {
             ROOT_LOGGER.insightsDisabled();
-        }
-        synchronized (output) {
-            output.notify();
         }
     }
 
@@ -215,10 +218,12 @@ public class InsightsService implements Service<InsightsService> {
 
     public void setRhnUid(String rhnUid) {
         this.rhnUid = rhnUid;
+        scheduler.setRhnUid(rhnUid);
     }
 
     public void setRhnPw(String rhnPw) {
         this.rhnPw = rhnPw;
+        scheduler.setRhnPw(rhnPw);
     }
 
     public String getRhnUid() {
@@ -235,14 +240,17 @@ public class InsightsService implements Service<InsightsService> {
 
     public void setUrl(String url) {
         this.url = url;
+        scheduler.setUrl(url);
     }
 
     public void setInsightsEndpoint(String insightsEndpoint) {
         this.insightsEndpoint = insightsEndpoint;
+        scheduler.setInsightsEndpoint(insightsEndpoint);
     }
 
     public void setSystemEndpoint(String systemEndpoint) {
         this.systemEndpoint = systemEndpoint;
+        scheduler.setSystemEndpoint(systemEndpoint);
     }
 
     public String getInsightsEndpoint() {
@@ -255,6 +263,7 @@ public class InsightsService implements Service<InsightsService> {
 
     public void setUserAgent(String userAgent) {
         this.userAgent = userAgent;
+        scheduler.setUserAgent(userAgent);
     }
 
     public String getUserAgent() {
@@ -263,10 +272,12 @@ public class InsightsService implements Service<InsightsService> {
 
     private void setProxyPort(String proxyPort) {
         this.proxyPort = proxyPort;
+        scheduler.setProxyPort(proxyPort);
     }
 
     private void setProxyUrl(String proxyUrl) {
         this.proxyUrl = proxyUrl;
+        scheduler.setProxyUrl(proxyUrl);
     }
 
     private String getProxyPort() {
@@ -279,10 +290,12 @@ public class InsightsService implements Service<InsightsService> {
 
     private void setProxyPw(String proxyPw) {
         this.proxyPw = proxyPw;
+        scheduler.setProxyPw(proxyPw);
     }
 
     private void setProxyUser(String proxyUser) {
         this.proxyUser = proxyUser;
+        scheduler.setProxyUser(proxyUser);
     }
 
     private String getProxyPw() {
@@ -321,7 +334,7 @@ public class InsightsService implements Service<InsightsService> {
             String proxyUrl, String proxyPort, String proxyUser, String proxyPw) {
         setProxyUser(proxyUser);
         setProxyPw(proxyPw);
-        setRhnLoginCredentials(rhnUid, rhnPw); //, proxyUrl, proxyPort,insightsEndpoint,systemEndpoint,url,userAgent);
+        setRhnLoginCredentials(rhnUid, rhnPw, proxyUrl, proxyPort);
     }
 
     public void setConnectionManager() {
@@ -337,62 +350,9 @@ public class InsightsService implements Service<InsightsService> {
         } catch (MalformedURLException e) {
             proxyUrlUrl = null;
         }
-        if(rhnUid != null && rhnPw != null) {
+        if (rhnUid != null && rhnPw != null) {
             api = new API(rhnUid, rhnPw, url, proxyUser, proxyPw, proxyUrlUrl,
                     proxyPortInt, userAgent);
-        }
-    }
-
-    public void sendJdr(String fileName, String uuid) {
-        String description = JDR_DESCRIPTION.replace("{uuid}", uuid);
-        boolean wasSuccessful = true;
-        File file = new File(fileName);
-        String systemUrl = "";
-        try {
-            systemUrl = systemEndpoint;
-            api.getInsights();
-            Response response = api.getInsights().get(systemUrl + uuid);
-            com.redhat.gss.redhat_support_lib.infrastructure.System system = response
-                    .readEntity(com.redhat.gss.redhat_support_lib.infrastructure.System.class);
-            // if system is unregistered then attempt to register system
-            if (system.getUnregistered_at() != null) {
-                api.getInsights().addSystem(systemUrl, uuid,
-                        InetAddress.getLocalHost().getHostName());
-            }
-        } catch (RequestException e) {
-            // if the system was not found then attempt to register the system
-            if (e.getMessage().contains(
-                    "" + Response.Status.NOT_FOUND.getStatusCode())) {
-                try {
-                    api.getInsights().addSystem(systemUrl, uuid,
-                            InetAddress.getLocalHost().getHostName());
-                } catch (RequestException exception) {
-                    ROOT_LOGGER.couldNotRegisterSystem(exception);
-                } catch (MalformedURLException exception) {
-                    ROOT_LOGGER.couldNotRegisterSystem(exception);
-                } catch (UnknownHostException exception) {
-                    ROOT_LOGGER.couldNotRegisterSystem(exception);
-                }
-            } else {
-                ROOT_LOGGER.couldNotRegisterSystem(e);
-            }
-        } catch (MalformedURLException e) {
-            ROOT_LOGGER.couldNotFindSystem(e);
-        } catch (UnknownHostException e) {
-            ROOT_LOGGER.couldNotFindSystem(e);
-        }
-        try {
-            api.getInsights().upload((insightsEndpoint + uuid), file,
-                    description);
-        } catch (FileNotFoundException e) {
-            wasSuccessful = false;
-            ROOT_LOGGER.couldNotFindJdr(e);
-        } catch (MalformedURLException | ParseException | RequestException e) {
-            wasSuccessful = false;
-            ROOT_LOGGER.couldNotUploadJdr(e);
-        }
-        if (wasSuccessful) {
-            ROOT_LOGGER.jdrSent();
         }
     }
 }
