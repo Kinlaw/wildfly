@@ -45,7 +45,7 @@ public class InsightsFrequencyHandler extends
     protected boolean applyUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
             ModelNode resolvedValue, ModelNode currentValue, HandbackHolder<Void> handbackHolder) throws OperationFailedException {
         InsightsScheduler scheduler = (InsightsScheduler) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue();
-        scheduler.setScheduleInterval(resolvedValue.asLong());
+        scheduler.setScheduleInterval(resolvedValue.asInt());
         return false;
     }
 
@@ -65,6 +65,6 @@ public class InsightsFrequencyHandler extends
     protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
             ModelNode valueToRestore, ModelNode valueToRevert, Void handback) {
         InsightsScheduler scheduler = (InsightsScheduler) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue();
-        scheduler.setScheduleInterval(valueToRestore.asLong());
+        scheduler.setScheduleInterval(valueToRestore.asInt());
     }
 }

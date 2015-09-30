@@ -45,9 +45,9 @@ public class InsightsConfiguration {
     private final String proxyPw;
     private final String url;
     private final String userAgent;
-    private final long scheduleInterval;
+    private final int scheduleInterval;
 
-    public InsightsConfiguration(String insightsEndpoint, String systemEndpoint, String rhnUid, String rhnPw, String proxyUrl, int proxyPort, String proxyUser, String proxyPw, String url, String userAgent, long scheduleInterval) {
+    public InsightsConfiguration(String insightsEndpoint, String systemEndpoint, String rhnUid, String rhnPw, String proxyUrl, int proxyPort, String proxyUser, String proxyPw, String url, String userAgent, int scheduleInterval) {
         this.insightsEndpoint = insightsEndpoint;
         this.systemEndpoint = systemEndpoint;
         this.rhnUid = rhnUid;
@@ -61,7 +61,7 @@ public class InsightsConfiguration {
         this.scheduleInterval = scheduleInterval;
     }
 
-    public long getScheduleInterval() {
+    public int getScheduleInterval() {
         return scheduleInterval;
     }
 

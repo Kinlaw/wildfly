@@ -65,7 +65,7 @@ class InsightsSubsystemAdd extends AbstractAddStepHandler {
                 getStringValue(InsightsSubsystemDefinition.PROXYPASSWORD, context, operation),
                 getStringValue(InsightsSubsystemDefinition.URL, context, operation),
                 getStringValue(InsightsSubsystemDefinition.USERAGENT, context, operation),
-                InsightsSubsystemDefinition.SCHEDULE_INTERVAL.resolveModelAttribute(context, operation).asLong());
+                InsightsSubsystemDefinition.SCHEDULE_INTERVAL.resolveModelAttribute(context, operation).asInt());
         InsightsService.addService(context.getServiceTarget(), createUploaderExecutorService(), enabled, config);
     }
 

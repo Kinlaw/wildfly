@@ -69,12 +69,6 @@ public class InsightsEnabledHandler extends AbstractWriteAttributeHandler<Void> 
     protected void revertUpdateToRuntime(OperationContext context,
             ModelNode operation, String attributeName,
             ModelNode valueToRestore, ModelNode valueToRevert, Void handback) {
-        if (attributeName.equals(InsightsExtension.ENABLED)) {
-            InsightsService service = (InsightsService) context
-                    .getServiceRegistry(true)
-                    .getRequiredService(InsightsService.createServiceName())
-                    .getValue();
-            service.setEnabled(valueToRestore.asBoolean());
-        }
+        ((InsightsService) context.getServiceRegistry(true).getRequiredService(SERVICE_NAME).getValue()).setEnabled(valueToRestore.asBoolean());
     }
 }

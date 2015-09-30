@@ -43,19 +43,12 @@ public interface InsightsScheduler {
     boolean isEnabled();
 
     /**
-     * Get the current schedule interval
-     *
-     * @return the scan interval in ms
-     */
-    long getScheduleInterval();
-
-    /**
      * Set the schedule interval.
      *
      * @param scanInterval
      *            the scan interval in ms
      */
-    void setScheduleInterval(long scanInterval);
+    void setScheduleInterval(int scanInterval);
 
     /**
      * Start the scanner, if not already started, using a default
@@ -89,15 +82,11 @@ public interface InsightsScheduler {
     void setProxyUrl(String proxyUrl);
 
     /**
-     * set the proxy port
-     */
-    void setProxyPort(String proxyPort);
-
-    /**
      * set the proxy user
      * @param proxyPort
      */
     void setProxyPort(int proxyPort);
+
 
     /**
      * set the proxy user

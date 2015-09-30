@@ -21,9 +21,6 @@
  */
 package org.jboss.as.insights.extension;
 
-
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.WEB_URL;
-
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -50,7 +47,7 @@ public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
             .build();
 
     protected static final SimpleAttributeDefinition SCHEDULE_INTERVAL = new SimpleAttributeDefinitionBuilder(
-            InsightsExtension.SCHEDULE_INTERVAL, ModelType.LONG)
+            InsightsExtension.SCHEDULE_INTERVAL, ModelType.INT)
             .setAllowExpression(true)
             .setXmlName(InsightsExtension.SCHEDULE_INTERVAL)
             .setMeasurementUnit(MeasurementUnit.DAYS)
@@ -117,7 +114,6 @@ public class InsightsSubsystemDefinition extends PersistentResourceDefinition {
             InsightsExtension.URL, ModelType.STRING).setAllowExpression(true)
             .setFlags(AttributeAccess.Flag.RESTART_RESOURCE_SERVICES)
             .setDefaultValue(new ModelNode(InsightsService.DEFAULT_BASE_URL))
-            .addArbitraryDescriptor(WEB_URL, new ModelNode(true))
             .setAllowNull(true).build();
 
     protected static final SimpleAttributeDefinition USERAGENT = new SimpleAttributeDefinitionBuilder(

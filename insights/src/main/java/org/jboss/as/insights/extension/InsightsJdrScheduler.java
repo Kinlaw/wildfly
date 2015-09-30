@@ -45,7 +45,7 @@ class InsightsJdrScheduler implements InsightsScheduler {
     private String systemEndpoint;
 
     private volatile boolean enabled = false;
-    private volatile long scheduleInterval = 1;
+    private volatile int scheduleInterval = 1;
 
     private String rhnUid;
     private String rhnPw;
@@ -115,7 +115,7 @@ class InsightsJdrScheduler implements InsightsScheduler {
     }
 
     @Override
-    public void setScheduleInterval(long scheduleInterval) {
+    public void setScheduleInterval(int scheduleInterval) {
         boolean enabled = this.enabled;
         if(enabled) {
             stopScheduler();
